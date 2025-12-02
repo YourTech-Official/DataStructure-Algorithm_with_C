@@ -1,0 +1,141 @@
+# Dynamic Memory (DM) - Key Points with Code Examples
+
+## **1. Call by Value vs Call by Reference**
+
+### Call by Value (Can't modify original)
+```c
+void wrong_initialize(int *arr, int size) {
+    arr = malloc(size * sizeof(int));  // Only changes local copy
+    // Original 'arr' in main() remains unchanged
+}
+```
+
+### Call by Reference (Can modify original)
+```c
+void initialize_ref(int **arr, int size) {
+    *arr = malloc(size * sizeof(int));  // Modifies original pointer
+}
+
+// Usage: initialize_ref(&arr, size);
+```
+
+### Return Value (Standard approach)
+```c
+int* initialize(int size) {
+    int *arr = malloc(size * sizeof(int));
+    return arr;  // Return new pointer value
+}
+
+// Usage: arr = initialize(size);
+```
+
+## **2. Heap vs Stack Memory**
+
+```c
+int stack_array[100];           // Stack - automatic cleanup
+int *heap_array = malloc(400);  // Heap - manual cleanup needed
+free(heap_array);               // Must free heap memory
+```
+
+## **3. Always Check malloc() Success**
+
+```c
+int *arr = malloc(size * sizeof(int));
+if (arr == NULL) {
+    printf("Memory allocation failed!\n");
+    exit(1);  // Or handle error appropriately
+}
+```
+
+## **4. Correct sizeof Usage**
+
+```c
+// Wrong
+malloc(size * sizeof(arr));  // sizeof pointer (8 bytes)
+
+// Correct  
+malloc(size * sizeof(int));  // sizeof data type (4 bytes)
+```
+
+## **5. Track Current Size vs Capacity**
+
+```c
+int capacity = 10;    // Maximum elements
+int current_size = 0; // Current elements
+int *arr = malloc(capacity * sizeof(int));
+```
+
+## **6. Always Free Allocated Memory**
+
+```c
+int *arr = malloc(size * sizeof(int));
+// ... use array ...
+free(arr);     // Prevent memory leaks
+arr = NULL;    // Good practice
+```
+
+## **7. Return Values in isFull() and isEmpty() Functions**
+
+### Why Return Current Size Instead of -1?
+
+```c
+// Better approach - Return current size
+int insertBegin(int *arr, int size, int capacity, int value) {
+    if (isFull(capacity, size)) {
+        return size;  // Return unchanged size, operation failed
+    }
+    // Insert logic...
+    return size + 1;  // Return new size after successful insertion
+}
+
+// Poor approach - Return -1
+int insertBegin(int *arr, int size, int capacity, int value) {
+    if (isFull(capacity, size)) {
+        return -1;  // Caller loses track of current size
+    }
+    // Insert logic...
+    return size + 1;
+}
+```
+
+### Reasons to Return Size Instead of -1:
+
+1. **Preserve State Information**
+   ```c
+   size = insertBegin(arr, size, capacity, 20);
+   // size still contains valid current count even if insertion fails
+   ```
+
+2. **Avoid Invalid State**
+   ```c
+   // With -1 return:
+   if (size == -1) {
+       // What's the actual current size? We lost this information!
+   }
+   ```
+
+3. **Consistent Return Type**
+   ```c
+   // All operations return valid size (0 to capacity)
+   // No special error codes to handle
+   ```
+
+4. **Easier Error Handling**
+   ```c
+   int old_size = size;
+   size = insertBegin(arr, size, capacity, value);
+   if (size == old_size) {
+       printf("Insertion failed - array full\n");
+   }
+   ```
+
+## **Simple Notes to Remember:**
+
+- **malloc()** returns pointer → use pointer return type
+- **Stack** = automatic, **Heap** = manual management
+- Always **check malloc() != NULL**
+- **sizeof(datatype)** not **sizeof(pointer)**
+- **free()** what you **malloc()**
+- Separate **capacity** from **current size**
+- **Call by reference** when you need to modify original variables
+- **Return current size** instead of -1 to preserve state information
